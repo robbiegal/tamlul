@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Windows and macOS are not incidental (design §4.19): the primary shell is PowerShell on
+    # Windows, stock macOS has no `python`, and every day-one hazard in the design is OS-specific.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      # No model, no torch: the suite runs on the fake backend and recorded fixtures. `asr` is
+      # included (faster-whisper + onnxruntime, ~100 MB, no weights) because the plan stage uses
+      # its bundled Silero VAD.
+      - name: Install (core + asr + export + dev, no diarization)
+        run: pip install -e ".[dev,asr,export]"
+      - name: Test
+        run: pytest -q
+      - name: Launcher smoke test (no environment yet)
+        shell: bash
+        run: |
+          python scripts/tamlul.py --data "$RUNNER_TEMP/tamlul-data" status --json | python -c "import sys,json; d=json.load(sys.stdin); assert d['installed'] is False, d"
+          python scripts/tamlul_env.py --data "$RUNNER_TEMP/tamlul-data" status --no-probe > /dev/null
+      - name: Lint
+        run: ruff check src scripts tests
+      # The venv installs a *built* copy (not editable), so package data must reach the wheel.
+      - name: Wheel carries package data
+        shell: bash
+        run: |
+          pip wheel --no-deps -w "$RUNNER_TEMP/whl" .
+          python - "$RUNNER_TEMP"/whl/tamlul-*.whl <<'EOF'
+          import sys, zipfile
+          names = set(zipfile.ZipFile(sys.argv[1]).namelist())
+          need = ['tamlul/models.json', 'tamlul/schema/transcript-1.0.json', 'tamlul/prompts/annotate.md',
+                  'tamlul/itn/data/nemo/numbers_digit.tsv', 'tamlul/fixtures/fleurs_he.wav', 'tamlul/fixtures/fleurs_he.jsonl',
+                  'tamlul/_vendor/pyannote_fast/VENDOR.md']
+          missing = [n for n in need if n not in names]
+          assert not missing, missing
+          EOF
+
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate plugin manifest and skills (strict)
+        run: npx -y @anthropic-ai/claude-code@latest plugin validate . --strict

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "tamlul",
+  "displayName": "Tamlul",
+  "version": "0.1.0",
+  "description": "Transcribe and annotate Hebrew conversations locally: speaker-attributed, timestamped, verbatim transcripts of meetings, interviews, calls and voice notes, with turns, overlaps, action items and summaries.",
+  "author": {
+    "name": "robbiegal",
+    "url": "https://github.com/robbiegal"
+  },
+  "homepage": "https://github.com/robbiegal/tamlul#readme",
+  "repository": "https://github.com/robbiegal/tamlul",
+  "license": "MIT; see THIRD_PARTY_NOTICES.md",
+  "keywords": [
+    "hebrew",
+    "transcription",
+    "diarization",
+    "whisper",
+    "ivrit",
+    "meeting-notes",
+    "speech-to-text"
+  ],
+  "userConfig": {
+    "profile": {
+      "type": "string",
+      "title": "Default profile",
+      "description": "meeting (default), voice-note, interview, ca, legal or auto. Sets the ASR revision and annotation defaults.",
+      "default": "meeting",
+      "options": [
+        "meeting",
+        "voice-note",
+        "interview",
+        "ca",
+        "legal",
+        "auto"
+      ]
+    },
+    "compute_type": {
+      "type": "string",
+      "title": "CTranslate2 compute type",
+      "description": "auto (the pre-release decision recorded in models.json), int8 or float32.",
+      "default": "auto",
+      "options": [
+        "auto",
+        "int8",
+        "float32"
+      ]
+    },
+    "threads": {
+      "type": "number",
+      "title": "CPU threads for ASR",
+      "description": "0 = physical cores (calibration may refine it).",
+      "default": 0
+    },
+    "diarization": {
+      "type": "string",
+      "title": "Speaker diarization",
+      "description": "on or off. Off skips pyannote entirely (no speaker layer).",
+      "default": "on",
+      "options": [
+        "on",
+        "off"
+      ]
+    },
+    "models_dir": {
+      "type": "directory",
+      "title": "Model directory",
+      "description": "Where the multi-GB models are stored. Leave empty for the plugin data directory.",
+      "default": ""
+    }
+  }
+}

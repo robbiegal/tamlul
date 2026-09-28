@@ -1,0 +1,20 @@
+{
+  "name": "tamlul",
+  "displayName": "Tamlul",
+  "source": {
+    "source": "url",
+    "url": "https://github.com/robbiegal/tamlul.git"
+  },
+  "description": "Transcribe and annotate Hebrew conversations locally - meetings, interviews, calls, WhatsApp voice notes - into speaker-attributed, timestamped verbatim transcripts with turns, overlaps, summaries and action items. Audio never leaves the machine.",
+  "category": "productivity",
+  "keywords": [
+    "hebrew",
+    "transcription",
+    "diarization",
+    "whisper",
+    "ivrit-ai",
+    "meetings"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/robbiegal/tamlul#readme"
+}

@@ -1,0 +1,482 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/robbiegal/tamlul/schema/transcript-1.0.json",
+  "title": "tamlul transcript.json (schema tamlul/annotation/1.0)",
+  "description": "One JSON per recording. Times are integer milliseconds. words[].t_raw is the immutable ASR token; t is the rendered text. Evidence anchors are raw word index ranges. Cross-field rules (index ranges, monotonic times, anchor quotes) are enforced by `tamlul validate`, not by this schema.",
+  "type": "object",
+  "required": [
+    "schema",
+    "media",
+    "pipeline",
+    "speakers",
+    "words",
+    "segments",
+    "utterances",
+    "turns",
+    "events",
+    "stats",
+    "text_edits",
+    "annotations",
+    "review"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "pattern": "^tamlul/annotation/1\\.[0-9]+$"
+    },
+    "created": {
+      "type": "string"
+    },
+    "plugin_version": {
+      "type": "string"
+    },
+    "media": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256",
+        "duration_ms"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "duration_ms": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "channels": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sample_rate": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "codec": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "container": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decoder": {
+          "type": "string"
+        },
+        "true_stereo": {
+          "type": "boolean"
+        },
+        "gain_db": {
+          "type": "number"
+        }
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "required": [
+        "asr",
+        "decode",
+        "plan",
+        "profile"
+      ],
+      "properties": {
+        "profile": {
+          "type": "string"
+        },
+        "asr": {
+          "type": "object",
+          "required": [
+            "engine",
+            "model",
+            "revision",
+            "model_sha256",
+            "compute_type"
+          ]
+        },
+        "decode": {
+          "type": "object"
+        },
+        "plan": {
+          "type": "object"
+        },
+        "diarization": {
+          "type": "object"
+        },
+        "attribution": {
+          "type": "object"
+        },
+        "itn": {
+          "type": "object"
+        },
+        "glossary": {
+          "type": "object"
+        },
+        "calibration_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "align": {
+          "type": "object",
+          "description": "word-boundary post-processing applied after ASR",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "snapped_boundaries": {
+              "type": "integer"
+            },
+            "snap_max_ms": {
+              "type": "integer"
+            },
+            "raw_regions": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "speakers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "diar_label",
+          "name",
+          "name_source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          },
+          "label": {
+            "type": "string"
+          },
+          "diar_label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "name_source": {
+            "enum": [
+              "user",
+              "llm",
+              "voiceprint",
+              "channel",
+              "none"
+            ]
+          },
+          "name_confidence": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "name_evidence": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "gender_hint": {
+            "type": [
+              "object",
+              "string",
+              "null"
+            ]
+          },
+          "stats": {
+            "type": "object"
+          },
+          "possibly_spurious": {
+            "type": "boolean"
+          },
+          "sample": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "words": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "i",
+          "s",
+          "e",
+          "t_raw",
+          "t",
+          "p"
+        ],
+        "properties": {
+          "i": {
+            "type": "integer"
+          },
+          "s": {
+            "type": "integer"
+          },
+          "e": {
+            "type": "integer"
+          },
+          "t_raw": {
+            "type": "string"
+          },
+          "t": {
+            "type": "string"
+          },
+          "p": {
+            "type": "number"
+          },
+          "spk": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "spk_conf": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "overlap": {
+            "type": "boolean"
+          },
+          "spk2": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "edited": {
+            "type": "boolean"
+          },
+          "channel": {
+            "type": "integer"
+          },
+          "snap": {
+            "type": "string",
+            "enum": [
+              "s",
+              "e",
+              "se"
+            ],
+            "description": "boundary moved from VAD padding to the unpadded speech edge"
+          }
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "s",
+          "e",
+          "text",
+          "w",
+          "asr",
+          "flags"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "s": {
+            "type": "integer"
+          },
+          "e": {
+            "type": "integer"
+          },
+          "spk": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "w": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "group": {
+            "type": "integer"
+          },
+          "asr": {
+            "type": "object"
+          },
+          "edited": {
+            "type": "boolean"
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "speech_fraction": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "utterances": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "s",
+          "e",
+          "w",
+          "text"
+        ]
+      }
+    },
+    "turns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "s",
+          "e",
+          "w",
+          "text",
+          "utts"
+        ]
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "s",
+          "e"
+        ]
+      }
+    },
+    "candidates": {
+      "type": "object"
+    },
+    "stats": {
+      "type": "object"
+    },
+    "text_edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stage",
+          "kind",
+          "before",
+          "after",
+          "reason"
+        ]
+      }
+    },
+    "annotations": {
+      "type": "object",
+      "description": "Claude's judgement layers. Every item carries evidence: [{w: [i0, i1], quote, s, e}].",
+      "properties": {
+        "summary": {
+          "type": "object"
+        },
+        "speaker_names": {
+          "type": "array"
+        },
+        "speaker_summaries": {
+          "type": "array"
+        },
+        "topics": {
+          "type": "array"
+        },
+        "decisions": {
+          "type": "array"
+        },
+        "action_items": {
+          "type": "array"
+        },
+        "questions": {
+          "type": "array"
+        },
+        "key_quotes": {
+          "type": "array"
+        },
+        "term_restorations": {
+          "type": "array"
+        },
+        "boundary_corrections": {
+          "type": "array"
+        },
+        "source": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "required": [
+        "status",
+        "speakers_confirmed",
+        "edited",
+        "edits"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "speakers_confirmed": {
+          "type": "boolean"
+        },
+        "edited": {
+          "type": "boolean"
+        },
+        "edits": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

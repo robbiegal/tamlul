@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "note": "Pin manifest (design Appendix A). sha256 values come from the HF API at each tag on 2026-09-18; the installer refuses a download whose primary file does not match. compute_type.decision is the pre-release decision of design §1.3 and is 'pending' until the phase-4 grid runs.",
+  "artefacts": {
+    "asr/turbo-ct2@2025.05.13": {
+      "kind": "ct2",
+      "role": "asr",
+      "repo": "ivrit-ai/whisper-large-v3-turbo-ct2",
+      "revision": "2025.05.13",
+      "commit": "a2cec1d3",
+      "license": "Apache-2.0",
+      "attribution": "ivrit.ai Whisper large-v3-turbo Hebrew fine-tune (Marmor et al., Interspeech 2025), Apache-2.0",
+      "allow_patterns": ["model.bin", "config.json", "tokenizer.json", "vocabulary.json", "preprocessor_config.json", "README.md"],
+      "primary": "model.bin",
+      "files": {
+        "model.bin": {"size": 1617884968, "sha256": "db2a2265aa012c16c7db9edda3d699c99f984efdd3f2e22a72a8ce7e9720f3a2"}
+      },
+      "size_bytes": 1620000000,
+      "compute_type": {"decision": "int8", "basis": "phase-4 grid on eval-whatsapp + eval-d1 (design §1.3): int8 - float32 WER eval-whatsapp +0.0031 (95 % CI -0.0005..+0.0068), eval-d1 +0.0004 (CI -0.0016..+0.0022); neither CI excludes 0; int8 decodes ~1.7x faster on CPU"}
+    },
+    "asr/turbo-ct2@2025.04.03": {
+      "kind": "ct2",
+      "role": "asr",
+      "repo": "ivrit-ai/whisper-large-v3-turbo-ct2",
+      "revision": "2025.04.03",
+      "commit": "1c50ba92",
+      "license": "Apache-2.0",
+      "attribution": "ivrit.ai Whisper large-v3-turbo Hebrew fine-tune (Marmor et al., Interspeech 2025), Apache-2.0",
+      "allow_patterns": ["model.bin", "config.json", "tokenizer.json", "vocabulary.json", "preprocessor_config.json", "README.md"],
+      "primary": "model.bin",
+      "files": {
+        "model.bin": {"size": 1617884968, "sha256": "5f059a8482776d3ae333cc7f91fdf1da27befaad7a1d1cba1bf393aa16d5c998"}
+      },
+      "size_bytes": 1620000000,
+      "compute_type": {"decision": "int8", "basis": "pending: phase-4 grid on eval-whatsapp + eval-d1 (design §1.3)"}
+    },
+    "asr/large-v3-ct2@2025.05.13": {
+      "kind": "ct2",
+      "role": "asr-max",
+      "repo": "ivrit-ai/whisper-large-v3-ct2",
+      "revision": "2025.05.13",
+      "commit": "5896b9f3",
+      "license": "Apache-2.0",
+      "attribution": "ivrit.ai Whisper large-v3 Hebrew fine-tune (Marmor et al., Interspeech 2025), Apache-2.0",
+      "allow_patterns": ["model.bin", "config.json", "tokenizer.json", "vocabulary.json", "preprocessor_config.json", "README.md"],
+      "primary": "model.bin",
+      "files": {
+        "model.bin": {"size": 3087284276, "sha256": "765965efd777190f76e8b337520056f00d68e48bb99b2f95d28670b2364a02ce"}
+      },
+      "size_bytes": 3090000000,
+      "compute_type": {"decision": "int8", "basis": "pending: phase-4 grid; the only public int8 regression is GPU int8_float16 on this 32-layer decoder"}
+    },
+    "diarize/pyannote-community-1": {
+      "kind": "pyannote",
+      "role": "diarize",
+      "repo": "pyannote-community/speaker-diarization-community-1",
+      "revision": "8a527374977391da736e0daaef26855d949d9685",
+      "commit": "8a527374977391da736e0daaef26855d949d9685",
+      "license": "CC-BY-4.0",
+      "attribution": "pyannoteAI speaker-diarization-community-1 (pipeline weights incl. BUT PLDA) and WeNet WeSpeaker ResNet34-LM embeddings, CC BY 4.0; downloaded by the installer from the ungated byte-identical mirror, not redistributed by tamlul",
+      "allow_patterns": ["config.yaml", "README.md", "segmentation/*", "embedding/*", "plda/*"],
+      "primary": "segmentation/pytorch_model.bin",
+      "files": {
+        "segmentation/pytorch_model.bin": {"size": 5906507, "sha256": "7ad24338d844fb95985486eb1a464e32d229f6d7a03c9abe60f978bacf3f816e"},
+        "embedding/pytorch_model.bin": {"size": 26646242, "sha256": "6f10ff60898a1d185fa22e1d11e0bfa8a92efec811f11bca48cb8cafebefd929"},
+        "plda/plda.npz": {"size": 133852, "sha256": "9b77bcd840692710dd3496f62ecfeed8d8e5f002fd991b785079b244eab7d255"},
+        "plda/xvec_transform.npz": {"size": 134376, "sha256": "325f1ce8e48f7e55e9c8aa47e05d2766b7c48c4b25b8de8dd751e7a4cc5fbe8f"}
+      },
+      "size_bytes": 33000000
+    },
+    "align/wav2vec2-300m-lm-hebrew": {
+      "kind": "hf",
+      "role": "align-check",
+      "repo": "imvladikon/wav2vec2-xls-r-300m-lm-hebrew",
+      "revision": "main",
+      "commit": "",
+      "license": "Apache-2.0 (HF tag; no LICENSE file)",
+      "attribution": "imvladikon wav2vec2-xls-r-300m-lm-hebrew, Apache-2.0",
+      "allow_patterns": ["model.safetensors", "config.json", "vocab.json", "tokenizer_config.json", "preprocessor_config.json", "special_tokens_map.json"],
+      "primary": "model.safetensors",
+      "files": {
+        "model.safetensors": {"size": 1261938632, "sha256": "75c4e535a62575ac57cf374dec17fb72fbab973dbd69d0391e47918880cf4e00"}
+      },
+      "size_bytes": 1262000000,
+      "optional": true,
+      "note": "Eval-only consistency check (design §4.5); never part of a profile install."
+    }
+  },
+  "profiles": {
+    "meeting": ["asr/turbo-ct2@2025.05.13", "diarize/pyannote-community-1"],
+    "voice-note": ["asr/turbo-ct2@2025.04.03"],
+    "interview": ["asr/turbo-ct2@2025.05.13", "diarize/pyannote-community-1"],
+    "ca": ["asr/turbo-ct2@2025.05.13", "diarize/pyannote-community-1"],
+    "legal": ["asr/turbo-ct2@2025.05.13", "diarize/pyannote-community-1"]
+  },
+  "quality_max": "asr/large-v3-ct2@2025.05.13"
+}

@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tamlul"
+version = "0.1.0"
+description = "Local Hebrew conversation transcription and annotation: ivrit.ai Whisper + pyannote, speaker-attributed and timestamped, packaged as a Claude Code plugin."
+readme = "README.md"
+# onnxruntime 1.30 ships no cp310 wheel; every other pin covers cp311-cp314.
+requires-python = ">=3.11,<3.15"
+license = { text = "MIT" }
+authors = [{ name = "robbiegal" }]
+keywords = ["hebrew", "transcription", "diarization", "whisper", "ivrit"]
+
+# Deliberately thin: the planner, exports, annotation, registry and jobs are
+# stdlib + numpy + PyYAML, so the test suite and every command that works from
+# an existing run install in seconds and need no model.
+dependencies = [
+    "numpy>=1.26",
+    "PyYAML>=6.0",
+    "huggingface_hub>=1.31,<2",
+]
+
+[project.optional-dependencies]
+# The only ASR engine in v1. faster-whisper bundles Silero VAD v6 as ONNX and
+# depends on onnxruntime + PyAV, so this extra is torch-free. The `silero-vad`
+# PyPI package is NOT used: it hard-requires torch and torchaudio<2.10, which
+# cannot resolve next to pyannote's torchaudio pin (design review fea-1).
+asr = [
+    "faster-whisper==1.2.1",
+    "ctranslate2>=4.8.1,<5",
+    "onnxruntime>=1.29,<2",
+]
+# pyannote.audio 4.0.7 needs torch. On Linux the PyPI `torch` wheel is the CUDA
+# build with multi-GB nvidia-* dependencies, so scripts/tamlul_env.py installs
+# torch/torchaudio/torchcodec from the PyTorch CPU index BEFORE this extra; the
+# pins here only constrain what pip then finds already satisfied.
+diarize = [
+    "pyannote.audio==4.0.7",
+    "torch==2.14.0",
+    "torchaudio==2.11.0",
+    "torchcodec==0.16.0",
+]
+export = ["pympi-ling>=1.71", "praatio>=6.2"]
+eval = [
+    "pyarrow>=15",
+    "jiwer==4.0.0",
+    "pyannote.metrics>=4.1",
+    "hebrew==0.8.1",
+    "num2words>=0.5.14",
+    "uroman>=1.3",
+]
+# meeteval ships no Windows wheel and needs MSVC to build; cpWER is computed
+# in-house, meeteval is only needed for tcpWER/DI-cpWER/ORC-WER and the viz.
+eval-meeteval = ["meeteval>=0.4.3"]
+cuda = ["faster-whisper==1.2.1", "ctranslate2>=4.8.1,<5", "nvidia-cublas-cu12", "nvidia-cudnn-cu12"]
+dev = ["pytest>=8", "ruff>=0.6"]
+# v1.1 extras (not installed by default; kept here so the names are stable):
+whispercpp = ["pywhispercpp==1.5.1"]
+sherpa = ["sherpa-onnx==1.13.8"]
+docx = ["python-docx>=1.2"]
+
+[project.scripts]
+tamlul = "tamlul.cli:main"
+tamlul-diarize = "tamlul.diarize.child:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+tamlul = ["models.json", "schema/*.json", "prompts/*.md", "fixtures/*", "fixtures/**/*", "_vendor/**/VENDOR.md", "_vendor/**/LICENSE*", "itn/data/**/*.tsv", "itn/data/**/*.txt", "itn/data/**/*.md", "itn/data/**/LICENSE*"]
+
+[tool.tamlul.vendor]
+# Code and data copied into this repository, pinned by upstream commit. Every directory under
+# src/tamlul/_vendor/ is listed; tests/test_notices.py checks that every entry has a notice in
+# THIRD_PARTY_NOTICES.md. Ideas re-implemented without copying code are credited there instead.
+pyannote_fast = { repo = "https://github.com/pyannote/pyannote-audio", ref = "pull/2051, pull/2048", license = "MIT" }
+asr_training = { repo = "https://github.com/ivrit-ai/asr-training", ref = "760572069c3a", license = "MIT" }
+openai_whisper_normalizer = { repo = "https://github.com/openai/whisper", ref = "v20250625", license = "MIT" }
+hebrew_audio_transcriber = { repo = "https://github.com/KoganTheDev/hebrew-audio-transcriber", ref = "7ca0992", license = "MIT" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501", "B008", "B905", "UP007"]
+per-file-ignores = { "src/tamlul/_vendor/**" = ["E", "W", "I", "UP", "B"] }
