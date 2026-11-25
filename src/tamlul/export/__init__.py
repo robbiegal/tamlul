@@ -15,6 +15,7 @@ import argparse
 import csv
 import html
 import io
+import mimetypes
 import pathlib
 import re
 import shutil
@@ -215,13 +216,37 @@ def to_html(doc: dict) -> str:
     return "\n".join(parts)
 
 
+# pympi guesses a linked file's mimetype from its extension and only knows wav/mpg/mpeg/mp4/xml,
+# so .m4a, .mp3, .opus ... raise KeyError inside add_linked_file: always pass it ourselves
+EAF_MIMES = {".wav": "audio/x-wav", ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac",
+             ".flac": "audio/flac", ".ogg": "audio/ogg", ".oga": "audio/ogg", ".opus": "audio/ogg",
+             ".amr": "audio/amr", ".wma": "audio/x-ms-wma",
+             ".mp4": "video/mp4", ".mpeg": "video/mpeg", ".mpg": "video/mpeg", ".mkv": "video/x-matroska",
+             ".mov": "video/quicktime", ".avi": "video/x-msvideo", ".webm": "video/webm",
+             ".3gp": "video/3gpp", ".wmv": "video/x-ms-wmv"}
+
+
+def eaf_mimetype(media_path: str) -> str:
+    suffix = pathlib.Path(media_path).suffix.lower()
+    if suffix in EAF_MIMES:
+        return EAF_MIMES[suffix]
+    return mimetypes.guess_type(f"x{suffix}")[0] or "application/octet-stream"
+
+
+def _eaf_ms(seconds: float) -> int:
+    """``_monotone`` hands back whole milliseconds as seconds; ``int(s * 1000)`` truncates
+    1.235 to 1234 and collapses a 1-ms interval, which pympi rejects. Round instead."""
+    return round(seconds * 1000)
+
+
 def to_eaf(doc: dict, media_path: str, tmp_dir: pathlib.Path) -> str | None:
     try:
         import pympi
     except ImportError:
         return None
     eaf = pympi.Elan.Eaf()
-    eaf.add_linked_file(pathlib.Path(media_path).as_uri(), relpath=None, mimetype=None)
+    eaf.add_linked_file(pathlib.Path(media_path).as_uri(), relpath=None,
+                       mimetype=eaf_mimetype(media_path))
     spk_ids = [s["id"] for s in doc["speakers"]] or ["S0"]
     for sid in spk_ids:
         eaf.add_tier(_name(doc, sid) if sid != "S0" else "transcript")
@@ -229,14 +254,14 @@ def to_eaf(doc: dict, media_path: str, tmp_dir: pathlib.Path) -> str | None:
     for sid in spk_ids:
         turns = _monotone([(t["s"], t["e"], t["text"]) for t in doc["turns"] if (t["spk"] or "S0") == sid])
         for s, e, text in turns:
-            eaf.add_annotation(_name(doc, sid) if sid != "S0" else "transcript", int(s * 1000), int(e * 1000), text)
+            eaf.add_annotation(_name(doc, sid) if sid != "S0" else "transcript", _eaf_ms(s), _eaf_ms(e), text)
         words = _monotone([(w["s"], w["e"], w["t"]) for w in doc["words"] if w["t"] and (w["spk"] or "S0") == sid])
         for s, e, text in words:
-            eaf.add_annotation(f"{sid}-words", int(s * 1000), int(e * 1000), text)
+            eaf.add_annotation(f"{sid}-words", _eaf_ms(s), _eaf_ms(e), text)
     eaf.add_tier("events")
     for s, e, kind in _monotone([(e["s"], e["e"], e["kind"]) for e in doc["events"]
                                  if e["kind"] in ("overlap", "pause", "gap", "latch", "interruption")]):
-        eaf.add_annotation("events", int(s * 1000), int(e * 1000), kind)
+        eaf.add_annotation("events", _eaf_ms(s), _eaf_ms(e), kind)
     tmp = tmp_dir / ".tmp.eaf"
     eaf.to_file(str(tmp))
     text = tmp.read_text(encoding="utf-8")

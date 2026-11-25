@@ -87,6 +87,36 @@ def test_interval_exports_tolerate_overlapping_words(data_dir, synthetic_wav, mo
     assert eaf and "-words" in eaf
 
 
+def test_eaf_export_links_any_container(data_dir, synthetic_wav, monkeypatch, capsys):
+    """pympi only guesses wav/mpg/mpeg/mp4/xml mimetypes; an .m4a recording must still export."""
+    pytest.importorskip("pympi")
+    from tamlul.export import eaf_mimetype, to_eaf
+    monkeypatch.setenv("TAMLUL_FAKE_ASR", "1")
+    assert _run(["--data", str(data_dir), "transcribe", str(synthetic_wav), "--diarization", "off", "--formats", "md"]) == 0
+    run_id = next(ln for ln in capsys.readouterr().out.splitlines() if ln.startswith("run: "))[5:]
+    rd = RunDir.open(DataLayout(data_dir), run_id)
+    doc = rd.read_transcript()
+    for name in ("call.m4a", "note.opus", "talk.mp3", "zoom.mkv", "x.unheard-of"):
+        doc["media"]["path"] = str(synthetic_wav.with_name(name))
+        eaf = to_eaf(doc, doc["media"]["path"], rd.exports)
+        assert eaf and eaf_mimetype(doc["media"]["path"]) in eaf
+    assert eaf_mimetype("a/b/call.M4A") == "audio/mp4"
+
+
+def test_eaf_export_keeps_one_ms_events(data_dir, synthetic_wav, monkeypatch, capsys):
+    """A 1-ms interval survives the ms -> s -> ms round trip only when it is rounded, not truncated."""
+    pytest.importorskip("pympi")
+    from tamlul.export import to_eaf
+    monkeypatch.setenv("TAMLUL_FAKE_ASR", "1")
+    assert _run(["--data", str(data_dir), "transcribe", str(synthetic_wav), "--diarization", "off", "--formats", "md"]) == 0
+    run_id = next(ln for ln in capsys.readouterr().out.splitlines() if ln.startswith("run: "))[5:]
+    rd = RunDir.open(DataLayout(data_dir), run_id)
+    doc = rd.read_transcript()
+    doc["events"] = [{"s": 1000, "e": 1000, "kind": "pause"}]     # zero length; 1001 ms truncates back to 1000
+    eaf = to_eaf(doc, doc["media"]["path"], rd.exports)
+    assert eaf and "pause" in eaf
+
+
 def test_snap_to_speech_pulls_boundaries_out_of_silence():
     from tamlul.plan import snap_to_speech
     raw = [[1.0, 2.0], [3.0, 4.0], [6.0, 7.0]]           # unpadded speech, seconds
